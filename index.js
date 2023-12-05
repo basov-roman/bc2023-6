@@ -150,17 +150,17 @@ app.put("/devices/:device_Id", upload.none(), (req, res) => {
 
     device = findObjectById(device_Id, jsonData);
 
-    const updatedDevice = {
-      id: device_Id,
-      device_Name: req.body.device_Name,
-      description: req.body.description,
-      serial_Number: req.body.serial_Number,
-      manufacturer: req.body.manufacturer,
-      used_By: device.used_By,
-      picture: device.picture,
-    };
-
     if (device !== undefined) {
+      const updatedDevice = {
+        id: device_Id,
+        device_Name: req.body.device_Name,
+        description: req.body.description,
+        serial_Number: req.body.serial_Number,
+        manufacturer: req.body.manufacturer,
+        used_By: device.used_By,
+        picture: device.picture,
+      };
+
       jsonData = jsonData.filter((item) => item.id !== device_Id);
 
       device = updatedDevice;
@@ -320,6 +320,8 @@ app.put("/users-devices/:user_Id", upload.none(), (req, res) => {
     let users_jsonData = JSON.parse(data);
 
     user = findObjectById(user_Id, users_jsonData);
+    if (user == undefined)
+      return res.status(404).send("Користувача не знайдено!");
 
     fs.readFile("devices.json", "utf8", (err, data) => {
       if (err) {
@@ -330,64 +332,62 @@ app.put("/users-devices/:user_Id", upload.none(), (req, res) => {
       let devices_jsonData = JSON.parse(data);
 
       device = findObjectById(device_Id, devices_jsonData);
+      if (device == undefined)
+        return res.status(404).send("Девайс не знайдено!");
 
       if (device.used_By == "") {
-        if (user !== undefined && device !== undefined) {
-          const deviceUpdate = {
-            id: device.id,
-            device_Name: device.device_Name,
-            description: device.description,
-            serial_Number: device.serial_Number,
-            manufacturer: device.manufacturer,
-            used_By: user.user_Name,
-            picture: device.picture,
-          };
+        const deviceUpdate = {
+          id: device.id,
+          device_Name: device.device_Name,
+          description: device.description,
+          serial_Number: device.serial_Number,
+          manufacturer: device.manufacturer,
+          used_By: user.user_Name,
+          picture: device.picture,
+        };
 
-          devices_jsonData = devices_jsonData.filter(
-            (item) => item.id !== device_Id
-          );
-          devices_jsonData.push(deviceUpdate);
+        devices_jsonData = devices_jsonData.filter(
+          (item) => item.id !== device_Id
+        );
+        devices_jsonData.push(deviceUpdate);
 
-          fs.writeFile(
-            "devices.json",
-            JSON.stringify(devices_jsonData, null, 2),
-            (err) => {
-              if (err) {
-                console.error(err);
-              }
+        fs.writeFile(
+          "devices.json",
+          JSON.stringify(devices_jsonData, null, 2),
+          (err) => {
+            if (err) {
+              console.error(err);
             }
-          );
+          }
+        );
 
-          user.devices_In_Use.push({
-            device_Name: device.device_Name,
-            serial_Number: device.serial_Number,
-          });
+        user.devices_In_Use.push({
+          device_Name: device.device_Name,
+          serial_Number: device.serial_Number,
+        });
 
-          const userUpdate = {
-            id: user.id,
-            user_Name: user.user_Name,
-            devices_In_Use: user.devices_In_Use,
-          };
+        const userUpdate = {
+          id: user.id,
+          user_Name: user.user_Name,
+          devices_In_Use: user.devices_In_Use,
+        };
 
-          users_jsonData = users_jsonData.filter((item) => item.id !== user_Id);
-          users_jsonData.push(userUpdate);
+        users_jsonData = users_jsonData.filter((item) => item.id !== user_Id);
+        users_jsonData.push(userUpdate);
 
-          fs.writeFile(
-            "users.json",
-            JSON.stringify(users_jsonData, null, 2),
-            (err) => {
-              if (err) {
-                console.error(err);
-                return res.status(500).send("Помилка запису в JSON-файл!");
-              }
-              res
-                .status(201)
-                .send("Дані про користувача та девайс успішно оновлено!");
+        fs.writeFile(
+          "users.json",
+          JSON.stringify(users_jsonData, null, 2),
+          (err) => {
+            if (err) {
+              console.error(err);
+              return res.status(500).send("Помилка запису в JSON-файл!");
             }
-          );
-        } else {
-          res.status(404).send("Девайс чи користувача не знайдено!");
-        }
+            res
+              .status(201)
+              .send("Дані про користувача та девайс успішно оновлено!");
+          }
+        );
       } else {
         res.status(400).send("Девайс уже використовується іншим користувачем!");
       }
@@ -408,6 +408,8 @@ app.delete("/users-devices/:user_Id", upload.none(), (req, res) => {
     let users_jsonData = JSON.parse(data);
 
     user = findObjectById(user_Id, users_jsonData);
+    if (user == undefined)
+      return res.status(404).send("Користувача не знайдено!");
 
     fs.readFile("devices.json", "utf8", (err, data) => {
       if (err) {
@@ -418,6 +420,8 @@ app.delete("/users-devices/:user_Id", upload.none(), (req, res) => {
       let devices_jsonData = JSON.parse(data);
 
       device = findObjectById(device_Id, devices_jsonData);
+      if (device == undefined)
+        return res.status(404).send("Пристрій не знайдено!");
 
       const isDeviceInUseByUser = user.devices_In_Use.some((dev) => {
         return (
@@ -427,64 +431,60 @@ app.delete("/users-devices/:user_Id", upload.none(), (req, res) => {
       });
 
       if (isDeviceInUseByUser) {
-        if (user !== undefined && device !== undefined) {
-          const deviceUpdate = {
-            id: device.id,
-            device_Name: device.device_Name,
-            description: device.description,
-            serial_Number: device.serial_Number,
-            manufacturer: device.manufacturer,
-            used_By: "",
-            picture: device.picture,
-          };
+        const deviceUpdate = {
+          id: device.id,
+          device_Name: device.device_Name,
+          description: device.description,
+          serial_Number: device.serial_Number,
+          manufacturer: device.manufacturer,
+          used_By: "",
+          picture: device.picture,
+        };
 
-          devices_jsonData = devices_jsonData.filter(
-            (item) => item.id !== device_Id
-          );
-          devices_jsonData.push(deviceUpdate);
+        devices_jsonData = devices_jsonData.filter(
+          (item) => item.id !== device_Id
+        );
+        devices_jsonData.push(deviceUpdate);
 
-          fs.writeFile(
-            "devices.json",
-            JSON.stringify(devices_jsonData, null, 2),
-            (err) => {
-              if (err) {
-                console.error(err);
-              }
+        fs.writeFile(
+          "devices.json",
+          JSON.stringify(devices_jsonData, null, 2),
+          (err) => {
+            if (err) {
+              console.error(err);
             }
+          }
+        );
+
+        user.devices_In_Use = user.devices_In_Use.filter((DEV) => {
+          return (
+            DEV.device_Name !== device.device_Name &&
+            DEV.serial_Number !== device.serial_Number
           );
+        });
 
-          user.devices_In_Use = user.devices_In_Use.filter((DEV) => {
-            return (
-              DEV.device_Name !== device.device_Name &&
-              DEV.serial_Number !== device.serial_Number
-            );
-          });
+        const userUpdate = {
+          id: user.id,
+          user_Name: user.user_Name,
+          devices_In_Use: user.devices_In_Use,
+        };
 
-          const userUpdate = {
-            id: user.id,
-            user_Name: user.user_Name,
-            devices_In_Use: user.devices_In_Use,
-          };
+        users_jsonData = users_jsonData.filter((item) => item.id !== user_Id);
+        users_jsonData.push(userUpdate);
 
-          users_jsonData = users_jsonData.filter((item) => item.id !== user_Id);
-          users_jsonData.push(userUpdate);
-
-          fs.writeFile(
-            "users.json",
-            JSON.stringify(users_jsonData, null, 2),
-            (err) => {
-              if (err) {
-                console.error(err);
-                return res.status(500).send("Помилка запису в JSON-файл!");
-              }
-              res
-                .status(201)
-                .send("Дані про користувача та девайс успішно оновлено!");
+        fs.writeFile(
+          "users.json",
+          JSON.stringify(users_jsonData, null, 2),
+          (err) => {
+            if (err) {
+              console.error(err);
+              return res.status(500).send("Помилка запису в JSON-файл!");
             }
-          );
-        } else {
-          res.status(404).send("Девайс чи користувача не знайдено!");
-        }
+            res
+              .status(201)
+              .send("Дані про користувача та девайс успішно оновлено!");
+          }
+        );
       } else {
         res.status(400).send("Девайс не знайдено у вашому користуванні!");
       }
