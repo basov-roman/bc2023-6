@@ -1,0 +1,392 @@
+openapi: 3.1.0
+
+info:
+  title: Lab_6 Manager API
+  description: |-
+    API for Lab_6
+  version: 1.0.0
+
+servers:
+- url: http://localhost:8000
+
+tags:
+- name: devices
+  description: Операції з пристроями
+- name: users
+  description: Операції з користувачами
+- name: users-devices
+  description: Користувацькі операції з пристроями
+- name: pictures
+  description: Додавання картинок
+- name: forms
+  description: Форма для додавання картинок та їх відображення
+
+paths:
+  /devices:
+    get:
+      tags:
+      - devices
+      summary: Отримання інформації про всі пристрої
+      operationId: getDevices
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GETdevices"
+    post:
+      tags:
+      - devices
+      summary: Додавання нового пристрою
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: "#/components/schemas/POSTdevices"
+      responses:
+        "201":
+          description: Sucessfull operation
+        "400":
+          description: Bad request
+
+  /devices/{device_Id}:
+    get:
+      tags:
+      - devices
+      summary: Отримання інформації про один пристрій
+      parameters:
+      - name: device_Id
+        in: path
+        required: true
+        schema:
+          type: integer
+      responses:
+        "200":
+          description: Sucessfull operation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GETdevices{device_Id}"
+        "400":
+          description: Bad request
+    put:
+      tags:
+      - devices
+      summary: Оновлення інформації про пристрій
+      parameters:
+      - name: device_Id
+        in: path
+        required: true
+        schema:
+          type: integer
+          description: Ідентифікатор пристрою
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: "#/components/schemas/PUTdevices{device_Id}"
+      responses:
+        "200":
+          description: Sucessfull operation
+        "400":
+          description: Bad request
+    delete:
+      tags:
+      - devices
+      summary: Видалення пристрою
+      parameters:
+      - name: device_Id
+        in: path
+        required: true
+        schema:
+          $ref: "#/components/schemas/DELETEdevices{device_Id}"
+      responses:
+        "200":
+          description: Девайс успішно видалено!
+        "404":
+          description: Девайс не знайдений!
+        "500":
+          description: Помилка при роботі з JSON-файлом!
+
+  /users:
+    get:
+      tags:
+      - users
+      summary: Отримання інформації про всіх користувачів
+      operationId: getUsers
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GETusers"
+    post:
+      tags:
+      - users
+      summary: Реєстарція нового користувача
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: "#/components/schemas/POSTusers"
+      responses:
+        "201":
+          description: Sucessfull operation
+        "400":
+          description: Bad request
+  /users/{user_Id}:
+    get:
+      tags:
+      - users
+      summary: Отримання інформації про девайси користувача
+      parameters:
+      - name: user_Id
+        in: path
+        required: true
+        schema:
+          type: integer
+      responses:
+        "200":
+          description: Sucessfull opration
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GETusers{user_Id}"
+        "400":
+          description: Bad request
+
+  /users-devices/{user_Id}:
+    put:
+      tags:
+      - users-devices
+      summary: Взяття девайса у користування
+      parameters:
+      - name: user_Id
+        in: path
+        required: true
+        schema:
+          type: integer
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: "#/components/schemas/PUTusers-devices{user_Id}"
+      responses:
+        "200":
+          description: Sucessfull operation
+        "400":
+          description: Bad request
+    delete:
+      tags:
+      - users-devices
+      summary: Повернення девайса з користування
+      parameters:
+      - name: user_Id
+        in: path
+        required: true
+        schema:
+          type: integer
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: "#/components/schemas/DELETEusers-devices{user_Id}"
+      responses:
+        "200":
+          description: Девайс успішно повернено!
+        "404":
+          description: Девайс не знайдено!
+        "500":
+          description: Помилка при роботі з JSON-файлом!
+
+  /pictures:
+    post:
+      tags:
+      - pictures
+      summary: Завантаження картинки для девайсу
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: "#/components/schemas/POSTpictures"
+      responses:
+        "201":
+          description: Successful operation
+        "400":
+          description: Bad request
+
+  /picture.html:
+    get:
+      tags:
+      - forms
+      summary: Форма для завантаження картинки для девайсу
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            text/html:
+              schema:
+                $ref: "#/components/schemas/GETpicture.html"
+
+components:
+  schemas:
+    GETdevices:
+      type: array
+      properties:
+        id:
+          type: string
+          description: Унікальний ідентифікатор пристрою
+        device_Name:
+          type: string
+          description: Назва пристрою
+        description:
+          type: string
+          description: Опис пристрою
+        serial_Number:
+          type: string
+          description: Серійний номер пристрою
+        manufacturer:
+          type: string
+          description: Виробник пристрою
+        used_By:
+          type: string
+          description: Ім'я користувача (якщо використовується)
+        picture:
+          type: string
+          description: Шлях на зображення пристрою
+      example:
+      - id: "1"
+        device_Name: "Xiaomi"
+        description: "Gold New"
+        serial_Number: "#123456"
+        manufacturer: "China"
+        used_By: "Roman"
+        picture: "device_Image-1701705431685-938647604.png"
+    POSTdevices:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Унікальний ідентифікатор пристрою
+        device_Name:
+          type: string
+          description: Назва пристрою
+        description:
+          type: string
+          description: Опис пристрою
+        serial_Number:
+          type: string
+          description: Серійний номер пристрою
+        manufacturer:
+          type: string
+          description: Виробник пристрою
+    GETdevices{device_Id}:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Унікальний ідентифікатор пристрою
+        device_Name:
+          type: string
+          description: Назва пристрою
+        description:
+          type: string
+          description: Опис пристрою
+        serial_Number:
+          type: string
+          description: Серійний номер пристрою
+        manufacturer:
+          type: string
+          description: Виробник пристрою
+        used_By:
+          type: string
+          description: Ім'я користувача (якщо використовується)
+        picture:
+          type: string
+          description: Шлях на зображення пристрою
+      example:
+      - id: "1"
+        device_Name: "Xiaomi"
+        description: "Gold New"
+        serial_Number: "#123456"
+        manufacturer: "China"
+        used_By: "Roman"
+        picture: "device_Image-1701705431685-938647604.png"
+    PUTdevices{device_Id}:
+      type: object
+      properties:
+        device_Name:
+          type: string
+          description: Нова назва пристрою
+        description:
+          type: string
+          description: Новий опис пристрою
+        serial_Number:
+          type: string
+          description: Новий серійний номер пристрою
+        manufacturer:
+          type: string
+          description: Новий виробник пристрою
+    DELETEdevices{device_Id}:
+      type: integer
+      description: Ідентифікатор пристрою для видалення
+    GETusers:
+      type: array
+      properties:
+        id:
+          type: string
+          description: Унікальний ідентифікатор користувача
+        user_Name:
+          type: string
+          description: Ім'я користувача
+        devices_In_Use:
+          type: array
+          description: Всі пристрої, які користувач використовує
+      example:
+      - id: "1"
+        user_Name: "Roman"
+        devices_In_Use: []
+    POSTusers:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Унікальний ідентифікатор користувача
+        user_Name:
+          type: string
+          description: Ім'я користувача
+    GETusers{user_Id}:
+      type: object
+      properties:
+        devices_In_Use:
+          type: array
+          description: Всі пристрої, які користувач використовує
+      example:
+        devices_In_Use: []
+    PUTusers-devices{user_Id}:
+      type: object
+      properties:
+        device_Id:
+          type: integer
+          description: Id пристрою взяття
+    DELETEusers-devices{user_Id}:
+      type: object
+      properties:
+        device_Id:
+          type: integer
+          description: Id пристрою для повернення
+    POSTpictures:
+      type: object
+      properties:
+        device_Image:
+          type: string
+          format: binary
+          description: Картинка для пристрою
+        device_Id:
+          type: integer
+          description: Id пристрою для завантаження картинки
+    GETpicture.html:
+      type: string
